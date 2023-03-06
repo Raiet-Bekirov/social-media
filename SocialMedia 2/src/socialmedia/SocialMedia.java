@@ -10,7 +10,6 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
   private static HashMap<String, Account> accountsByHandle = new HashMap<String, Account>();
   private static HashMap<Integer, Account> accountsById = new HashMap<Integer, Account>(); 
   private static HashMap<String, Integer> HandleAndId = new HashMap<String, Integer>();
-  private static HashMap<String, String> HandleAndPost = new HashMap<String, String>();
   private static HashMap<Integer, String> PostIdAndPost = new HashMap<Integer, String>();
 
   /**
@@ -258,7 +257,6 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
     }
 
     postId += 1;
-    HandleAndPost.put(handle, message); //!! problem -> if Alya post twice, it only show one of the post. might need some changes
     PostIdAndPost.put(postId, message);
     return postId;
   }
@@ -305,10 +303,11 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
 
     //execute but if Alya post twice, it only show one of the post. Need some changes. maybe one handler have records of post?
     a.createpost("Alya", "Life be hitting so hard these days");
+    a.createpost("Alya", "I love Jollibee");
     a.createpost("Raiet", "surviving I guess");
     a.createpost("Legend", "When life gives you lemon, eat it");
-    for (String handler: HandleAndPost.keySet()){
-      System.out.println(handler + " :\n"+ HandleAndPost.get(handler));
+    for (Integer l: PostIdAndPost.keySet()){
+      System.out.println(l + " :\n"+ PostIdAndPost.get(l));
       System.out.println(); 
     }
 
