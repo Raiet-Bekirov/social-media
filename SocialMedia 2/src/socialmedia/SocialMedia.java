@@ -278,8 +278,8 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
     else{
       throw new HandleNotRecognisedException("Handle does not match to any account in the system");
     }
-
-
+    
+    //might change to EndoPostId and the post instead of post id. lets see.
     postId += 1; //all original, comments and endorse are considerred as posts and they all have unique numerical identifier
     EndoPostIdAndPostId.put(postId, id);
     return postId;
