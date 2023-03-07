@@ -6,12 +6,9 @@ import java.util.HashMap; //to perform operations such as inserting, deleting, l
 //implementing SocialMediaPlatform interface
 public class SocialMedia{ //after you're done, type implements SocialMediaPlatform
   private int lastAccountId = 0; //initialize an id -> all accounts are unique 
-  private int postId = 0; 
   private static HashMap<String, Account> accountsByHandle = new HashMap<String, Account>();
   private static HashMap<Integer, Account> accountsById = new HashMap<Integer, Account>(); 
   private static HashMap<String, Integer> HandleAndId = new HashMap<String, Integer>();
-  private static HashMap<Integer, String> OriPostIdAndPost = new HashMap<Integer, String>();
-  private static HashMap<Integer, Integer> EndoPostIdAndPostId = new HashMap<Integer, Integer>();
 
   /**
    * The method creates an account in the platform with the given handle and
@@ -231,7 +228,8 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
   * 
   * After you've done all these. Think about deleteing account -> should remove all the post . Change description -> should not change all the posts
   */
-
+  private int postId = 0; 
+  private static HashMap<Integer, String> OriPostIdAndPost = new HashMap<Integer, String>();
   /**
   * This method allows user to post text messages up to 100 characters.
   *
@@ -262,6 +260,8 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
     return postId;
   }
   
+  private static HashMap<Integer, Integer> EndoPostIdAndPostId = new HashMap<Integer, Integer>();
+  //might wanna create exception methods so that its easy to read??
   public int endorsePost(String handle, int id) throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException{
     if(accountsByHandle.containsKey(handle)){
       if(OriPostIdAndPost.containsKey(id)){
@@ -282,6 +282,39 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
     //might change to EndoPostId and the post instead of post id. lets see.
     postId += 1; //all original, comments and endorse are considerred as posts and they all have unique numerical identifier
     EndoPostIdAndPostId.put(postId, id);
+    return postId;
+  }
+  
+  private static HashMap<Integer, Integer> ComPostIdAndPostId = new HashMap<Integer, Integer>();
+  private static HashMap<Integer, String> ComPostIdAndCom = new HashMap<Integer, String>();
+
+  public int commentPost(String handle, int id, String message) throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException, InvalidPostException{
+    if(accountsByHandle.containsKey(handle)){
+      if(OriPostIdAndPost.containsKey(id)){
+        for(Integer e: EndoPostIdAndPostId.keySet()){
+          if(e==id){
+            throw new NotActionablePostException("Not an actionable post");
+          }
+        }
+      }
+      else{
+        throw new PostIDNotRecognisedException("Post ID does not exist in the system");
+      }
+    }
+    else{
+      throw new HandleNotRecognisedException("Handle does not match to any account in the system");
+    }
+
+    if((message == null) || (message.isEmpty())){
+      throw new InvalidPostException("message is empty");
+    }
+    if(message.length() > 100){
+      throw new InvalidPostException("limit is 100 characters");
+    }
+
+    postId += 1;
+    ComPostIdAndPostId.put(postId, id);
+    ComPostIdAndCom.put(postId, message);
     return postId;
   }
   
@@ -335,6 +368,10 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
       System.out.println(l + " :\n"+ OriPostIdAndPost.get(l));
       System.out.println(); 
     }
-
+    a.commentPost("Alya", 2, "I love jollibee too");
+    for (Integer b: ComPostIdAndCom.keySet()){
+      System.out.println(b + " :\n"+ ComPostIdAndCom.get(b));
+      System.out.println(); 
+    }
   }
 }  
