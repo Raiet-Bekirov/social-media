@@ -10,7 +10,8 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
   private static HashMap<String, Account> accountsByHandle = new HashMap<String, Account>();
   private static HashMap<Integer, Account> accountsById = new HashMap<Integer, Account>(); 
   private static HashMap<String, Integer> HandleAndId = new HashMap<String, Integer>();
-  private static HashMap<Integer, String> PostIdAndPost = new HashMap<Integer, String>();
+  private static HashMap<Integer, String> OriPostIdAndPost = new HashMap<Integer, String>();
+  private static HashMap<Integer, Integer> EndoPostIdAndPostId = new HashMap<Integer, Integer>();
 
   /**
    * The method creates an account in the platform with the given handle and
@@ -257,9 +258,33 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
     }
 
     postId += 1;
-    PostIdAndPost.put(postId, message);
+    OriPostIdAndPost.put(postId, message);
     return postId;
   }
+  
+  public int endorsePost(String handle, int id) throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException{
+    if(accountsByHandle.containsKey(handle)){
+      if(OriPostIdAndPost.containsKey(id)){
+        for(Integer e: EndoPostIdAndPostId.keySet()){
+          if(e==id){
+            throw new NotActionablePostException("Not an actionable post");
+          }
+        }
+      }
+      else{
+        throw new PostIDNotRecognisedException("Post ID does not exist in the system");
+      }
+    }
+    else{
+      throw new HandleNotRecognisedException("Handle does not match to any account in the system");
+    }
+
+
+    postId += 1; //all original, comments and endorse are considerred as posts and they all have unique numerical identifier
+    EndoPostIdAndPostId.put(postId, id);
+    return postId;
+  }
+  
 
   //no need to submit this one. Just for testing -> might be useful for the SocialMediaPlatformTest though 
   public static void main (String[]args) throws IllegalHandleException, InvalidHandleException, HandleNotRecognisedException, InvalidPostException{
@@ -306,8 +331,8 @@ public class SocialMedia{ //after you're done, type implements SocialMediaPlatfo
     a.createpost("Alya", "I love Jollibee");
     a.createpost("Raiet", "surviving I guess");
     a.createpost("Legend", "When life gives you lemon, eat it");
-    for (Integer l: PostIdAndPost.keySet()){
-      System.out.println(l + " :\n"+ PostIdAndPost.get(l));
+    for (Integer l: OriPostIdAndPost.keySet()){
+      System.out.println(l + " :\n"+ OriPostIdAndPost.get(l));
       System.out.println(); 
     }
 
