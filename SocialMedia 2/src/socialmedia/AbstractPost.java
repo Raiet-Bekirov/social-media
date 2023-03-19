@@ -1,4 +1,4 @@
-package socialmedia.internal;
+package socialmedia;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,7 @@ import java.util.List;
 abstract public class AbstractPost {
     private int id;
     private Account account;
+    private Post oriPost;
 
     private List<Comment> comments;
     private List<Endorsement> endorsements;
@@ -14,8 +15,8 @@ abstract public class AbstractPost {
         this.id = id;
         this.account = account;
 
-        comments = new ArrayList<>();
-        endorsements = new ArrayList<>();
+        comments = new ArrayList<>(); // lists of comments
+        endorsements = new ArrayList<>(); //lists of endorsements
     }
 
     public int getId() {
@@ -30,6 +31,11 @@ abstract public class AbstractPost {
         return account == null ? null : account.getHandle();
     }
 
+    public String getMessage() {
+        return oriPost.getMessage();
+    }
+
+
     public void addComment(Comment comment) {
         comments.add(comment);
     }
@@ -41,7 +47,6 @@ abstract public class AbstractPost {
     public int getCommentsCount() {
         return comments.size();
     }
-
     public void addEndorsement(Endorsement endorsement) {
         endorsements.add(endorsement);
     }
@@ -51,7 +56,7 @@ abstract public class AbstractPost {
     }
 
     public int getEndorsementsCount() {
-        return endorsements.size();
+        return endorsements.size(); //total endorsements
     }
 
     public StringBuilder showPostDetails(StringBuilder sb, boolean withChildren) {
@@ -59,17 +64,35 @@ abstract public class AbstractPost {
     }
 
     protected StringBuilder showPostInternal(StringBuilder sb, String margin, boolean withChildren) {
-        StringBuilder res = showPostHeader(sb, margin);
+        /*if(oriPost == null){
+            StringBuilder res = showMessage(sb, margin);
+            if (withChildren && (getCommentsCount() > 0)) {
+                res = showTreeRootLine(res, margin);
+                String new_margin = getTreeMargin(margin);
+                for (Comment comment : comments) {
+                    res = showTreeArrow(res, margin);
+                    res = comment.showPostInternal(res, new_margin, withChildren);
+                }
+            }
+            return res;
+
+        }*/
+        StringBuilder res = showPostHeader(sb, margin); //The main post that is being commented on
         if (withChildren && (getCommentsCount() > 0)) {
             res = showTreeRootLine(res, margin);
             String new_margin = getTreeMargin(margin);
-            for (Comment comment : comments) {
-                res = showTreeArrow(res, margin);
-                res = comment.showPostInternal(res, new_margin, withChildren);
+            for (Comment comment : comments) { //show all the comments on that post
+                res = showTreeArrow(res, margin); //>
+                res = comment.showPostInternal(res, new_margin, withChildren); //the comment
             }
         }
-
         return res;
+        
+    }
+
+    protected StringBuilder showMessage(StringBuilder sb, String margin){
+        return sb.append(margin).append("The original content was removed from the system and is no longer available.").append("\n");
+    
     }
 
     protected StringBuilder showTreeRootLine(StringBuilder sb, String margin) {
@@ -89,6 +112,17 @@ abstract public class AbstractPost {
                 .append(margin).append("Account: ").append(getHandle()).append("\n")
                 .append(margin).append("No. endorsements: ").append(getEndorsementsCount())
                 .append(" | No. comments: ").append(getCommentsCount()).append("\n");
+        /*if (oriPost == null){
+            return sb.append(margin).append("The original content was removed from the system and is no longer available.");
+        }
+        else{
+            return sb.append("ID: ").append(id).append("\n")
+                .append(margin).append("Account: ").append(getHandle()).append("\n")
+                .append(margin).append("No. endorsements: ").append(getEndorsementsCount())
+                .append(" | No. comments: ").append(getCommentsCount()).append("\n");
+        }*/
+        
     }
+    //change here somewhere if post is null, print the message "post is deleted"
 
 }
