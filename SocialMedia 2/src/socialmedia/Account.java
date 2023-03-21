@@ -5,6 +5,7 @@ public class Account {
     private int id;
     private String handle;
     private String description;
+    private AbstractPost post;
 
     //constructors
     public Account(int id, String handle, String description) {
@@ -39,8 +40,10 @@ public class Account {
     }
 
     //show the account ; id, handler and description
-    public String showAccount() {
-        return "ID: "+ getId()+"\nHandle: "+ getHandle()+"\nDescription : "+getDescription();
+    public StringBuilder showAccount(StringBuilder builder) {
+        return builder.append("ID: ").append(getId()).append("\n")
+                .append("Handle: ").append(getHandle()).append("\n")
+                .append("Description: ").append(getDescription()).append("\n");
     }
 
 }

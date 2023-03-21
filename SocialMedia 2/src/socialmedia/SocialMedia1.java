@@ -1,18 +1,23 @@
 package socialmedia;
 
 import java.util.*;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.io.IOException;
+
 
 
 //implementing SocialMediaPlatform interface
-public class SocialMedia1 implements SocialMediaPlatform { //after you're done, type implements SocialMediaPlatform
+public class SocialMedia1 implements SocialMediaPlatform { 
     private int lastAccountId = 0; //initialize an id -> all accounts are unique
+    private int lastPostId = 0;
+
+    //Where we store all the accounts and posts
     private static HashMap<String, Account> accountsByHandle = new HashMap<String, Account>();
     private static HashMap<Integer, Account> accountsById = new HashMap<Integer, Account>();
+    private static HashMap<Integer, AbstractPost> postsById = new HashMap<>();
+    private static Map<Integer, Integer> endoAndOriId = new HashMap<>();
+    private static Map<Integer, Integer> comAndOriId= new HashMap<>();
+    private static List<Integer> oriPostId = new ArrayList<>();
 
     /**
      * The method checks handle for errors
@@ -36,7 +41,8 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
 
     @Override
     public int createAccount(String handle, String description) throws IllegalHandleException, InvalidHandleException {
-        checkHandle(handle);
+        checkHandle(handle); //for InvalidHandleException
+
         if (accountsByHandle.containsKey(handle)) { //if the account has the same name
             throw new IllegalHandleException("the handle already exists in the platform");
         }
@@ -61,15 +67,43 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
         return account.getId(); //the id of created account
     }
 
+    //This method prints all list of Id that are related to that handle
+    public List<Integer> listId(String handle){ 
+        List<Integer> listId = new ArrayList<>();
+        for (Map.Entry<Integer, AbstractPost> set : postsById.entrySet()) {
+            int id = set.getKey();
+            AbstractPost post = set.getValue();
+
+            if(post.getHandle()==handle){
+                listId.add(id);
+            }
+        }
+        return listId;
+    }
+
     @Override
     public void removeAccount(String handle) throws HandleNotRecognisedException{
         Account account = accountsByHandle.get(handle); 
-
         if(account == null){ //if the handle does not exist, account will be null
             throw new HandleNotRecognisedException("Handle does not match to any account in the system");
         }
 
-        //remove the account 
+        //All post made by this account must be deleted if this account is deleted
+        try {
+            //iterating over each post that are related to that handle
+            for(int i: listId(handle)){ 
+                AbstractPost post = postsById.get(i);
+                if(post == null||post.getAccount()==null){ //when post is null (repetition will occur) and generic empty post is when account is null
+                    continue; //skip that id
+                }
+                //method created below
+                deletePost(i);
+            }
+        } catch (PostIDNotRecognisedException e) {
+            throw new RuntimeException(e);
+        }
+        
+        //remove the account from system
         accountsByHandle.remove(account.getHandle());
         accountsById.remove(account.getId());
 
@@ -78,20 +112,32 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
     @Override
     public void removeAccount(int id) throws AccountIDNotRecognisedException{
         Account account = accountsById.get(id);
-
         if(account == null){
             throw new AccountIDNotRecognisedException("account Id does not match to any account in the system");
+        }
+
+        String handle = account.getHandle();
+        try {
+            for(int i: listId(handle)){
+                AbstractPost post = postsById.get(i);
+                if(post == null||post.getAccount()==null){ //when post is null (repetition will occur) and generic empty post is when account is null
+                    continue;
+                }
+                deletePost(i);
+            }
+            
+        } catch (PostIDNotRecognisedException e) {
+            throw new RuntimeException(e);
         }
 
         accountsByHandle.remove(account.getHandle());
         accountsById.remove(account.getId());
 
-    }
+    } 
 
     @Override
     public void updateAccountDescription(String handle, String description) throws HandleNotRecognisedException {
         Account account = accountsByHandle.get(handle);
-
         if(account == null){
             throw new HandleNotRecognisedException("Handle does not match to any account in the system");
         }
@@ -114,12 +160,15 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
         if(account == null){
             throw new HandleNotRecognisedException("Old Handle does not match to any account in the system");
         }
+
         //setter method to update the handler
         account.setHandle(newHandle);
 
+        //remove the old handle from the system and put in the new handle name
         accountsByHandle.remove(oldHandle);
         accountsByHandle.put(newHandle, account);
         
+        //repeat with id cause the account have changed
         accountsById.remove(account.getId());
         accountsById.put(account.getId(), account);
     }
@@ -138,14 +187,35 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
     @Override
     public String showAccount(String handle) throws HandleNotRecognisedException {
         Account account = accountsByHandle.get(handle); 
-
         if(account == null){ //if the handle does not exist, account will be null
             throw new HandleNotRecognisedException("Handle does not match to any account in the system");
         }
         //need to add post count and description
         //Post count: [total number of posts, including endorsements and replies]
         //Endorse count: [sum of endorsements received by each post of this account]
-        return account.showAccount();
+        int postCount= listId(handle).size();
+        //sum of endorsement of each account
+        Map<String, Integer> length = new HashMap<String, Integer>();
+        for (Map.Entry<Integer, AbstractPost> set : postsById.entrySet()) {
+            int postId = set.getKey();
+            AbstractPost post = set.getValue();
+
+            String accHandle = post.getHandle();
+            int totalEndo = length.containsKey(accHandle)? length.get(accHandle):0;
+            totalEndo += getEndoId(postId).size();
+            length.put(accHandle, totalEndo);
+        }
+
+        int endorseCount=0;
+        for (String a: length.keySet()){
+            if(a==handle){
+                endorseCount= length.get(handle);  
+            }
+        }
+        
+        return account.showAccount(new StringBuilder()).append("Post count: ")
+            .append(postCount).append("\n").append("Endorse count: ")
+            .append(endorseCount).toString();
     }
 
     //END OF ACCOUNT MANAGEMENT
@@ -161,13 +231,6 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
      *
      * After you've done all these. Think about deleteing account -> should remove all the post . Change description -> should not change all the posts
      */
-    private int lastPostId = 0;
-    private static HashMap<Integer, AbstractPost> postsById = new HashMap<>();
-    //Abstract post so it can contain from Post, Comment and Endorsement class
-    private static Map<Integer, Integer> endoAndOriId = new HashMap<>();
-    private static Map<Integer, Integer> comAndOriId= new HashMap<>();
-    private static List<Integer> oriPostId = new ArrayList<>();
-
 
     //checking InvalidPostException -> if message is empty or has more than 100 characters
     protected static void checkMessage(String message) throws InvalidPostException {
@@ -206,7 +269,11 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
             throw new PostIDNotRecognisedException("Post ID does not exist in the system");
         }
         //if endorsements post -> it is not actionable. So this basically means if the post is an endorsement post
+        Account accountPost = post.getAccount();
         if (post instanceof Endorsement) {
+            throw new NotActionablePostException("Not an actionable post");
+        }
+        if (accountPost == null){
             throw new NotActionablePostException("Not an actionable post");
         }
 
@@ -228,8 +295,11 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
         if (post == null) {
             throw new PostIDNotRecognisedException("Post ID does not exist in the system");
         }
-
+        Account accountPost = post.getAccount();
         if (post instanceof Endorsement) {
+            throw new NotActionablePostException("Not an actionable post");
+        }
+        if (accountPost == null){
             throw new NotActionablePostException("Not an actionable post");
         }
 
@@ -293,15 +363,35 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
         return comList;
     }
 
-    @Override
-    public void deletePost(int id) throws PostIDNotRecognisedException {
+    public void deleteAllComments(int id){ //id of the original/comment post that you delete
         AbstractPost post = postsById.get(id);
-        if (post == null) {
-            throw new PostIDNotRecognisedException("Post ID does not exist in the system");
-        }
+        if(post.getCommentsCount()>0){
+            for (int comId: getComId(id)){
+                AbstractPost comPost = postsById.get(comId);
+                Comment comment = (Comment)comPost;
+                
+                if(comPost.getCommentsCount()>0){
+                    for (int comId2: getComId(comId)){
+                        AbstractPost comPost2 = postsById.get(comId2);
+                        Comment comment2 = (Comment)comPost2;
 
-        //original post
-        if(post instanceof Post){
+                        comPost.removeComment(comment2); 
+                        comAndOriId.remove(comId2);
+                        AbstractPost emptyPost2 = new Comment(comId2, null, comPost, "The original content was removed from the system and is no longer available.");
+                        postsById.replace(comId2 , comment2, emptyPost2);
+                    }
+                }
+                post.removeComment(comment); 
+                comAndOriId.remove(comId);
+                AbstractPost emptyPost = new Comment(comId, null, post, "The original content was removed from the system and is no longer available.");
+                postsById.replace(comId , comment, emptyPost);
+            }
+        }
+    }
+
+    public void deleteAllEndorsement(int id){//delete all endo post pointed to the id
+        AbstractPost post = postsById.get(id);
+        if(post.getEndorsementsCount()>0){
             for (int endoId: getEndoId(id)){
                 AbstractPost endoPost = postsById.get(endoId);
                 Endorsement endorsement = (Endorsement)endoPost;
@@ -311,10 +401,25 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
                 post.removeEndorsement(endorsement);
                 endoAndOriId.remove(endoId);
             }
-            //remove the original post
-            oriPostId.remove(id);
+        }
+    }
+
+    @Override
+    public void deletePost(int id) throws PostIDNotRecognisedException {
+        AbstractPost post = postsById.get(id);
+        if (post == null) {
+            throw new PostIDNotRecognisedException("Post ID does not exist in the system");
+        }
+
+        //original post
+        if(post instanceof Post){
+            //deleteAllComments(id);
+            deleteAllEndorsement(id);
+            deleteAllComments(id);
+
             postsById.remove(id);
-            //postsById.replace(id, post, null); //It should replace the ori post as null, and if the post is null, print the mssage that this post is no longer available
+            oriPostId.remove(Integer.valueOf(id));
+            
         }
 
         //if the endorsement are being remove -> remove count from ori post 
@@ -326,10 +431,16 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
             endoAndOriId.remove(id);
         }
         
-        if (post instanceof Comment){
-            //same with ori post above
-            //just remove the comAndOriId hashmap
-            //also remove count from Abstract post
+        if(post instanceof Comment){
+            deleteAllEndorsement(id);
+            deleteAllComments(id);
+
+            AbstractPost oriPost = postsById.get(getOriId(id));
+            Comment oriCom = (Comment)post;
+            oriPost.removeComment(oriCom);
+            postsById.remove(id);
+            comAndOriId.remove(id);
+
         }
     }
 
@@ -547,18 +658,42 @@ public class SocialMedia1 implements SocialMediaPlatform { //after you're done, 
         } catch (NotActionablePostException e) {
             throw new RuntimeException(e);
         }*/
-
-        try {
-            a.deletePost(3);
+        //a.deleteAllComments(4);
+        /*try {
+            a.deletePost(9);
 
         } catch (PostIDNotRecognisedException e) {
             throw new RuntimeException(e);
-        } 
+        }*/
+        /*try {
+            a.commentPost("Alya", 2, "I only have limes!");
+            
+
+        } catch (PostIDNotRecognisedException e) {
+            throw new RuntimeException(e);
+        } catch (NotActionablePostException e) {
+            throw new RuntimeException(e);
+        } catch (HandleNotRecognisedException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidPostException e) {
+            throw new RuntimeException(e);
+        }*/
+
+        /*try {
+            a.removeAccount(1);
+        } catch (AccountIDNotRecognisedException e) {
+            e.printStackTrace();
+        }*/ 
 
         for (AbstractPost post : postsById.values()) {
             System.out.println(post.showPostDetails(new StringBuilder(), true).toString());
-        }
+        } 
 
+        System.out.println(a.showAccount("Legend"));
+
+        //System.out.println(a.listId("Raiet"));
+
+        
         /*System.out.println("Most endorsed post ID: "+ a.getMostEndorsedPost());
         System.out.println("Most endorsed Account ID: "+ a.getMostEndorsedAccount());
         System.out.println("Total original post: "+ a.getTotalOriginalPosts());
