@@ -1,7 +1,6 @@
 package socialmedia;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.io.IOException;
 
 
@@ -70,7 +69,7 @@ public class SocialMedia1 implements SocialMediaPlatform {
     //This method prints all list of Id that are related to that handle
     public List<Integer> listId(String handle){ 
         List<Integer> listId = new ArrayList<>();
-        for (Map.Entry<Integer, AbstractPost> set : postsById.entrySet()) {
+        for (var set : postsById.entrySet()) {
             int id = set.getKey();
             AbstractPost post = set.getValue();
 
@@ -196,7 +195,7 @@ public class SocialMedia1 implements SocialMediaPlatform {
         int postCount= listId(handle).size();
         //sum of endorsement of each account
         Map<String, Integer> length = new HashMap<String, Integer>();
-        for (Map.Entry<Integer, AbstractPost> set : postsById.entrySet()) {
+        for (var set : postsById.entrySet()) {
             int postId = set.getKey();
             AbstractPost post = set.getValue();
 
@@ -337,7 +336,7 @@ public class SocialMedia1 implements SocialMediaPlatform {
 
     public List<Integer> getEndoId(int id){ //get endo id from ori id
         List<Integer> endoList = new ArrayList<>();
-        for (Map.Entry<Integer, Integer> set : endoAndOriId.entrySet()) {
+        for (var set : endoAndOriId.entrySet()) {
             int endoId = set.getKey();
             int oriId = set.getValue();
 
@@ -351,7 +350,7 @@ public class SocialMedia1 implements SocialMediaPlatform {
 
     public List<Integer> getComId(int id){ //get endo id from ori id
         List<Integer> comList = new ArrayList<>();
-        for (Map.Entry<Integer, Integer> set : comAndOriId.entrySet()) {
+        for (var set : comAndOriId.entrySet()) {
             int comId = set.getKey();
             int oriId = set.getValue();
 
@@ -472,7 +471,7 @@ public class SocialMedia1 implements SocialMediaPlatform {
             length.put(id, getEndoId(id).size());
         }
         int maxLength = (Collections.max(length.values()));
-        for(Entry<Integer, Integer> entry : length.entrySet()){
+        for(var entry : length.entrySet()){
             if(entry.getValue()==maxLength){
                mostPost= entry.getKey();
             }
@@ -484,7 +483,7 @@ public class SocialMedia1 implements SocialMediaPlatform {
     public int getMostEndorsedAccount() {
         Map<Integer, Integer> length = new HashMap<Integer, Integer>();
         int mostPost=0;
-        for (Map.Entry<Integer, AbstractPost> set : postsById.entrySet()) {
+        for (var set : postsById.entrySet()) {
             int postId = set.getKey();
             AbstractPost post = set.getValue();
 
@@ -495,7 +494,7 @@ public class SocialMedia1 implements SocialMediaPlatform {
             length.put(accId, totalEndo);
         }
         int maxLength = (Collections.max(length.values()));
-        for(Entry<Integer, Integer> entry : length.entrySet()){
+        for(var : length.entrySet()){
             if(entry.getValue()==maxLength){
                mostPost= entry.getKey();
             }
