@@ -1,6 +1,6 @@
 package socialmedia.internal;
 
-/**
+/**class that collects data from endorsments for further serialization
  * 
  */
 abstract public class AbstractRepost extends AbstractPost{
@@ -10,10 +10,10 @@ abstract public class AbstractRepost extends AbstractPost{
     private Integer sourcePostId;
 
     /**
-     * 
-     * @param id
-     * @param account
-     * @param sourcePost
+     * sets parameters for original post as handle and id 
+     * @param id sourcePostId
+     * @param account handle of original creator
+     * @param sourcePost original post that got endorsed 
      */
     public AbstractRepost(int id, Account account, AbstractPost sourcePost) {
         super(id, account);
@@ -21,16 +21,16 @@ abstract public class AbstractRepost extends AbstractPost{
     }
 
     /**
-     * 
-     * @return
+     * finds the source post of the repost 
+     * @return sourcePost original post that got endorsed 
      */
     public AbstractPost getSourcePost() {
         return sourcePost;
     }
 
     /**
-     * 
-     * @param sourcePost
+     * sets original post of the endorsment as an abstract repost
+     * @param sourcePost original post that got endorsed 
      */
     public void setSourcePost(AbstractPost sourcePost) {
         this.sourcePost = sourcePost;
@@ -38,8 +38,8 @@ abstract public class AbstractRepost extends AbstractPost{
     }
 
     /**
-     * 
-     * @return
+     * adds original id as an abstaract id
+     * @return sourcePostId original post id that got endorsed 
      */
     public Integer getSourcePostId() {
         return sourcePostId;
